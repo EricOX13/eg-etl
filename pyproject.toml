@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "eg-etl"
+version = "0.0.1"
+description = "EG ETL"
+authors = ["Eric Yeung <ericox@gmail.com>"]
+license = "proprietary"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+jupyterlab = ">=4.0.5"
+jupytext = ">=1.15.2"
+SQLAlchemy = ">=2.0.21"
+pyspark = "^3.5.1"
+gocept-pseudonymize = "^3.0"
+jupyter = "^1.0.0"

@@ -1,0 +1,6 @@
+__pycache__/
+**/.DS_Store
+warehouse/db/*
+output/validation/*
+.pytest_cache
+*.csv

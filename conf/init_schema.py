@@ -21,13 +21,14 @@ def init_database(spark: SparkSession):
     if not spark.catalog.tableExists(users_table_name):
         users_schema = StructType(
             [
-                StructField("givenName", StringType(), True),
-                StructField("familyName", StringType(), True),
+                StructField("id", StringType(), False),
+                StructField("first_name", StringType(), True),
+                StructField("last_name", StringType(), True),
                 StructField("sex", StringType(), True),
                 StructField("email", StringType(), True),
-                StructField("dateOfBirth", DateType(), True),
-                StructField("address.street", StringType(), True),
-                StructField("address.postcode", StringType(), True),
+                StructField("dob", DateType(), True),
+                StructField("address_street", StringType(), True),
+                StructField("address_postcode", StringType(), True),
             ]
         )
         df = spark.createDataFrame([], users_schema)
@@ -41,7 +42,7 @@ def init_database(spark: SparkSession):
                 StructField("postcode", StringType(), True),
                 StructField("lacode", StringType(), True),
                 StructField("country", StringType(), True),
-                StructField("dateOfTermination", IntegerType(), True),
+                StructField("date_of_termination", IntegerType(), True),
             ]
         )
         df = spark.createDataFrame([], postcode_schema)

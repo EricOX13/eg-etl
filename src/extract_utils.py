@@ -31,3 +31,7 @@ def extract_json(sc: SparkSession, file_path: str, schema) -> DataFrame:
         )
     )
     return sc.read.json(text, schema=schema, mode="PERMISSIVE", multiLine=True)
+
+
+def extract_iceberg(sc: SparkSession, table: str) -> DataFrame:
+    return sc.sql(f"select * from db.{table}")

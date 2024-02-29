@@ -19,11 +19,11 @@ def pseudonymize(df: DataFrame) -> DataFrame:
     emailUDF = udf(lambda z: gocept.pseudonymize.email(z, SECRET), StringType())
     streetUDF = udf(lambda z: gocept.pseudonymize.street(z, SECRET), StringType())
     df_pseudonymizeed = (
-        df.withColumn("givenName", nameUDF(col("givenName")))
-        .withColumn("familyName", nameUDF(col("familyName")))
+        df.withColumn("first_name", nameUDF(col("first_name")))
+        .withColumn("last_name", nameUDF(col("last_name")))
         .withColumn("email", emailUDF(col("email")))
-        .withColumn("address.street", streetUDF(col("address.street")))
-        .withColumn("dateOfBirth", dateUDF(col("dateOfBirth")))
+        .withColumn("address_street", streetUDF(col("address_street")))
+        .withColumn("dob", dateUDF(col("dob")))
     )
 
     return df_pseudonymizeed

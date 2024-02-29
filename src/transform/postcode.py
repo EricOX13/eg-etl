@@ -27,7 +27,7 @@ class PostcodeTransformer:
             col("pcd").alias("postcode"),
             col("laua").alias("lacode"),
             col("ctry").alias("countryCode"),
-            col("doterm").cast(IntegerType()).alias("dateOfTermination"),
+            col("doterm").cast(IntegerType()).alias("date_of_termination"),
         )
 
         # replace country code by country name
@@ -41,5 +41,5 @@ class PostcodeTransformer:
             col("postcode"),
             col("lacode"),
             col("country"),
-            col("dateOfTermination"),
+            col("date_of_termination"),
         )

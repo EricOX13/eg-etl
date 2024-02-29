@@ -11,10 +11,10 @@ classifiers = [
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "3.11.0"
 jupyterlab = ">=4.0.5"
 jupytext = ">=1.15.2"
-SQLAlchemy = ">=2.0.21"
-pyspark = "^3.5.1"
+pyspark = "3.4"
 gocept-pseudonymize = "^3.0"
 jupyter = "^1.0.0"
+apache-airflow = "^2.8.2"

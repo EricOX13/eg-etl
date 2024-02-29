@@ -1,13 +1,6 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col
-from pyspark.sql.functions import lit
-from pyspark.sql.functions import rlike
-from pyspark.sql.functions import to_date
-from pyspark.sql.functions import udf
-from pyspark.sql.types import StringType
 from pyspark.sql.functions import monotonically_increasing_id
-
-import uuid
 
 from common_utils import create_logger
 from load_utils import write_to_json
@@ -21,22 +14,19 @@ def check_data_quality(df: DataFrame, batch: str) -> DataFrame:
     logger.info(f"Original dataframe count: {df.count()}")
 
     # Adding unique id for each record
-    uuidUdf = udf(lambda: str(uuid.uuid4()), StringType())
-    df_with_uuid = df.withColumn(UID_COLUMN_NAME, monotonically_increasing_id())
-
-    df_with_uuid.show(truncate=False)
+    df_with_uid = df.withColumn(UID_COLUMN_NAME, monotonically_increasing_id())
 
     # Data Validation
     failed_uuid_set = set()
 
-    failed_uuid_set.update(check_mandatory(df_with_uuid))
+    failed_uuid_set.update(check_mandatory(df_with_uid))
 
-    failed_uuid_set.update(check_format(df_with_uuid))
+    failed_uuid_set.update(check_format(df_with_uid))
 
     logger.info(f"Total failed record count: {len(failed_uuid_set)}")
 
     logger.info(failed_uuid_set)
-    df_result = df_with_uuid.where(~col(UID_COLUMN_NAME).isin(failed_uuid_set)).drop(
+    df_result = df_with_uid.where(~col(UID_COLUMN_NAME).isin(failed_uuid_set)).drop(
         UID_COLUMN_NAME
     )
 
@@ -47,8 +37,9 @@ def check_data_quality(df: DataFrame, batch: str) -> DataFrame:
         f"Deduplicated record count: {df_result.count() - df_deduplicated.count()}"
     )
 
+    # Write failed records to json file
     write_to_json(
-        df_with_uuid.where(col(UID_COLUMN_NAME).isin(failed_uuid_set)).drop(
+        df_with_uid.where(col(UID_COLUMN_NAME).isin(failed_uuid_set)).drop(
             UID_COLUMN_NAME
         ),
         type="validation",
@@ -56,6 +47,7 @@ def check_data_quality(df: DataFrame, batch: str) -> DataFrame:
         batch=batch,
     )
 
+    # return valid records
     return df_deduplicated
 
 
@@ -72,7 +64,6 @@ def check_mandatory(df: DataFrame) -> set:
     failed_man_uuid_set = set()
     for column in MANDATORY_COLUMNS:
         if column in df.columns:
-            df.show(truncate=False)
             logger.debug(column)
             failed_man_uuid_set.update(
                 df.where(col(column).isNull())
@@ -85,7 +76,6 @@ def check_mandatory(df: DataFrame) -> set:
     logger.info(
         f"Failed Mandatory column checking record count: {len(failed_man_uuid_set)}"
     )
-    print(failed_man_uuid_set)
 
     return failed_man_uuid_set
 
@@ -120,6 +110,7 @@ def check_format(df: DataFrame) -> set:
                 .rdd.flatMap(list)
                 .collect()
             )
+            logger.info(f"Column {mapping['column']} check {failed_format_uuid_set}")
         elif mapping["type"] == "postcode":
             failed_format_uuid_set.update(
                 df.where(
@@ -131,17 +122,19 @@ def check_format(df: DataFrame) -> set:
                 .rdd.flatMap(list)
                 .collect()
             )
+            logger.info(f"Column {mapping['column']} check {failed_format_uuid_set}")
         elif mapping["type"] == "email":
             failed_format_uuid_set.update(
                 df.where(
                     ~col(mapping["column"]).rlike(
-                        r"^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
+                        r"^[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?$"
                     )
                 )
                 .select(col(UID_COLUMN_NAME))
                 .rdd.flatMap(list)
                 .collect()
             )
+            logger.info(f"Column {mapping['column']} check {failed_format_uuid_set}")
 
     logger.info(f"Failed Format checking record count: {len(failed_format_uuid_set)}")
 

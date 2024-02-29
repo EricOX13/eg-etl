@@ -1,9 +1,12 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col
-from pyspark.sql.functions import create_map
-from pyspark.sql.functions import lit
-from pyspark.sql.types import IntegerType
-from itertools import chain
+from pyspark.sql.functions import to_date
+from pyspark.sql.functions import udf
+from pyspark.sql.types import DateType
+from pyspark.sql.types import StringType
+
+from psd_utils import pseudonymize
+import uuid
 
 
 class UserTransformer:
@@ -12,18 +15,19 @@ class UserTransformer:
     def transform(df_source: DataFrame) -> DataFrame:
 
         if df_source is None:
-            raise ValueError("Incorrect Postcode Value")
+            raise ValueError("Incorrect Users Value")
 
-        df_postcode = df_source.select(
-            col("pcd").alias("postcode"),
-            col("laua").alias("lacode"),
-            col("ctry").alias("countryCode"),
-            col("doterm").cast(IntegerType()).alias("dateOfTermination"),
+        uuidUdf = udf(lambda: str(uuid.uuid4()), StringType())
+
+        df_transformed_user = df_source.withColumn("id", uuidUdf()).select(
+            col("id"),
+            col("givenName").alias("first_name"),
+            col("familyName").alias("last_name"),
+            col("sex").alias("sex"),
+            col("email").alias("email"),
+            to_date(col("dateOfBirth"), "yyyy-MM-dd").alias("dob").cast(DateType()),
+            col("address.street").alias("address_street"),
+            col("address.postcode").alias("address_postcode"),
         )
 
-        return df_postcode.select(
-            col("postcode"),
-            col("lacode"),
-            col("country"),
-            col("dateOfTermination"),
-        )
+        return pseudonymize(df_transformed_user)

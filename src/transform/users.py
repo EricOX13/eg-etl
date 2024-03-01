@@ -1,6 +1,7 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col
 from pyspark.sql.functions import to_date
+from pyspark.sql.functions import regexp_replace
 from pyspark.sql.functions import udf
 from pyspark.sql.types import DateType
 from pyspark.sql.types import StringType
@@ -27,7 +28,7 @@ class UserTransformer:
             col("email").alias("email"),
             to_date(col("dateOfBirth"), "yyyy-MM-dd").alias("dob").cast(DateType()),
             col("address.street").alias("address_street"),
-            col("address.postcode").alias("address_postcode"),
+            regexp_replace(col("address.postcode"), " ", "").alias("address_postcode"),
         )
 
         return pseudonymize(df_transformed_user)
